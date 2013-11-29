@@ -1,7 +1,7 @@
 package com.thumbnails;
 
 import java.lang.ref.SoftReference;
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -15,13 +15,22 @@ import android.os.SystemClock;
 
 public class ImageLoader {
 	// 为了加快速度，在内存中开启缓存（主要应用于重复图片较多时，或者同一个图片要多次被访问，比如在ListView时来回滚动）
-	public LinkedHashMap<String, SoftReference<Bitmap>> imageCache = new LinkedHashMap<String, SoftReference<Bitmap>>();
+//	public LinkedHashMap<String, SoftReference<Bitmap>> imageCache = new LinkedHashMap<String, SoftReference<Bitmap>>();
+	private ArrayList<String> urls= new ArrayList<String>();
+	private ArrayList<SoftReference<Bitmap>> images= new ArrayList<SoftReference<Bitmap>>();
 	private ExecutorService executorService = Executors.newFixedThreadPool(10); // 固定五个线程来执行任务
 	private ImageCallBack callBack;
 	public Bitmap loadDrawable(final String imageUrl, final int width, final int height, final ImageCallBack callBack, final Handler handler) {
 		// 如果缓存过就从缓存中取出数据
-		if (imageCache.containsKey(imageUrl)) {
-			SoftReference<Bitmap> softReference = imageCache.get(imageUrl);
+//		if (imageCache.containsKey(imageUrl)) {
+//			SoftReference<Bitmap> softReference = imageCache.get(imageUrl);
+//			if (softReference.get() != null) {
+//				return softReference.get();
+//			}
+//		}
+		if(urls.contains(imageUrl)) {
+			
+			SoftReference<Bitmap> softReference = images.get(urls.indexOf(imageUrl));
 			if (softReference.get() != null) {
 				return softReference.get();
 			}
@@ -32,7 +41,9 @@ public class ImageLoader {
 				try {
 					
 					final Bitmap drawable = loadImageFromUrl(imageUrl,width, height);
-					imageCache.put(imageUrl, new SoftReference<Bitmap>(drawable));
+//					imageCache.put(imageUrl, new SoftReference<Bitmap>(drawable));
+					urls.add(imageUrl);
+					images.add(new SoftReference<Bitmap>(drawable));
 					Message msg= new Message();
 					msg.obj= drawable;
 					handler.sendMessage(msg);

@@ -1,6 +1,8 @@
 package com.thumbnails;
 
 import java.io.File;
+import java.lang.ref.SoftReference;
+import java.util.ArrayList;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -21,7 +23,8 @@ public class ListAdapter extends BaseAdapter {
 	private File[] lists;
 	private LayoutInflater inflater;
 	private Context context;
-	private int COUNT= 8;
+	private ArrayList<Integer> urls= new ArrayList<Integer>();
+	private ArrayList<SoftReference<View>> images= new ArrayList<SoftReference<View>>();
 	private ThumbNailsThread[] threads= new ThumbNailsThread[8];
 	private ImageLoader ImageLoader = new ImageLoader();
 	 
@@ -40,12 +43,13 @@ public class ListAdapter extends BaseAdapter {
 
 	@Override
 	public Object getItem(int position) {
-		return null;
+		
+		System.out.println("getItemgetItem");
+		return images.size()>= position?images.get(position).get(): null;
 	}
 
 	@Override
 	public long getItemId(int position) {
-		
 		
 		return position;
 	}
@@ -53,30 +57,39 @@ public class ListAdapter extends BaseAdapter {
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
 		
-		
-		ContentHolder holder= null;
-		if(convertView!= null) {
+		if(urls.contains(position)) {
 			
-			holder= (ContentHolder) convertView.getTag();
+			convertView= images.get(position).get();
 		}else {
 			
-			convertView= inflater.inflate(R.layout.item, null);
-			holder= new ContentHolder();
-			holder.icon= (ImageView) convertView.findViewById(R.id.thumbnail);
-			holder.name= (TextView) convertView.findViewById(R.id.item_name);
-			holder.size= (TextView) convertView.findViewById(R.id.item_size);
-			convertView.setTag(holder);
+			ContentHolder holder= null;
+			if(convertView!= null) {
+				
+				holder= (ContentHolder) convertView.getTag();
+			}else {
+				
+				convertView= inflater.inflate(R.layout.item, null);
+				holder= new ContentHolder();
+				holder.icon= (ImageView) convertView.findViewById(R.id.thumbnail);
+				holder.name= (TextView) convertView.findViewById(R.id.item_name);
+				holder.size= (TextView) convertView.findViewById(R.id.item_size);
+				convertView.setTag(holder);
+			}
+			setImage(holder,position);
+			View temp= new View(context);
+			temp= convertView;
+			urls.add(position);
+			images.add(new SoftReference<View>(convertView));
+//			setBitmap(holder,position);
+			holder.name.setText(lists[position].getName());
+			holder.size.setText((lists[position].length()/ 1000/ 1000.0)+ "M");
 		}
-		setImage(holder,position);
-//		setBitmap(holder,position);
-		holder.name.setText(lists[position].getName());
-		holder.size.setText((lists[position].length()/ 1000/ 1000.0)+ "M");
 		return convertView;
 	}
 	
 	private void setImage(final ContentHolder holder, int position) {
 		
-		ImageLoader.loadDrawable(lists[position].getAbsolutePath(), 40, 40, new ImageCallBack() {
+		ImageLoader.loadDrawable(lists[position].getAbsolutePath(), 80, 80, new ImageCallBack() {
 			
 			@Override
 			public void imageLoaded(Bitmap drawable) {
